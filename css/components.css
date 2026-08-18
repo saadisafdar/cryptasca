@@ -624,13 +624,9 @@
 
 /* ── 9. Search Input + Dropdown ──────────────────────────────── */
 
-/* Bug fix: overflow:visible ensures the absolute dropdown isn't clipped.
-   The reveal class adds transform which would trap position:fixed but not
-   position:absolute — the real anchor is .search-input-wrap below. */
 .search-wrapper {
-  /* No position:relative here — we don't want this to be the offset parent.
-     The reveal transform would confine absolutely-positioned children if
-     this element is the containing block. Let .search-input-wrap anchor it. */
+  position: relative;
+  z-index: 400; /* Create a stacking context above the watchlist cards */
   margin-bottom: 24px;
   max-width: 480px;
   overflow: visible;
