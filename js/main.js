@@ -33,8 +33,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   wireWatchlistSearch();
   wireGlobalDismiss();
 
-  // ─ Init reveal observer ─
+  // ─ Init reveal observer & visual interactions ─
   UI.initRevealObserver();
+  UI.initHeroLogoTilt();
 
   // ─ Initial data load ─
   await refreshAll(true /* initial */);

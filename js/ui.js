@@ -350,10 +350,82 @@ const UI = (() => {
     if (ctrl) ctrl.style.display = 'none';
   }
 
+  /* ── Hero Logo 3D Tilt Effect ───────────────────────────────── */
+
+  function initHeroLogoTilt() {
+    const visual = document.querySelector('.hero-visual');
+    const logo = document.querySelector('.hero-logo');
+    if (!visual || !logo) return;
+
+    let rafId = null;
+    let targetX = 0;
+    let targetY = 0;
+    let currX = 0;
+    let currY = 0;
+    let isHovered = false;
+
+    function onMouseMove(e) {
+      const rect = visual.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+
+      const relX = e.clientX - rect.left;
+      const relY = e.clientY - rect.top;
+      const midX = rect.width / 2;
+      const midY = rect.height / 2;
+
+      // Normalized from -1 to 1
+      const normX = Math.max(-1, Math.min(1, (relX - midX) / midX));
+      const normY = Math.max(-1, Math.min(1, (relY - midY) / midY));
+
+      // Subtle tilt max (degrees)
+      const maxTilt = 9;
+      targetX = -normY * maxTilt;
+      targetY = normX * maxTilt;
+
+      if (!isHovered) {
+        isHovered = true;
+        logo.style.transition = 'filter 0.35s ease';
+        startLoop();
+      }
+    }
+
+    function onMouseLeave() {
+      isHovered = false;
+      targetX = 0;
+      targetY = 0;
+      logo.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), filter 0.35s ease';
+      logo.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+    }
+
+    function loop() {
+      if (!isHovered) {
+        rafId = null;
+        return;
+      }
+
+      // Smooth lerp tracking
+      currX += (targetX - currX) * 0.18;
+      currY += (targetY - currY) * 0.18;
+
+      logo.style.transform = `perspective(800px) rotateX(${currX.toFixed(2)}deg) rotateY(${currY.toFixed(2)}deg) scale3d(1.035, 1.035, 1.035)`;
+      rafId = requestAnimationFrame(loop);
+    }
+
+    function startLoop() {
+      if (!rafId) {
+        rafId = requestAnimationFrame(loop);
+      }
+    }
+
+    visual.addEventListener('mousemove', onMouseMove, { passive: true });
+    visual.addEventListener('mouseleave', onMouseLeave, { passive: true });
+  }
+
   /* ── Public API ─────────────────────────────────────────────── */
   return {
     // Animations
     countUp,
+    initHeroLogoTilt,
     // Observer
     initRevealObserver,
     observeNewRevealEls,

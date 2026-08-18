@@ -272,8 +272,51 @@ a { text-decoration: none; color: inherit; }
 
 /* Portfolio hero */
 .portfolio-hero {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 40px 0 28px;
+}
+
+.hero-content {
+  flex: 0 1 55%;
+}
+
+.hero-visual {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 800px;
+  cursor: default;
+}
+
+.hero-logo {
+  display: block;
+  width: 250px;
+  max-width: 100%;
+  height: auto;
+  max-height: 250px;
+  object-fit: contain;
+  opacity: 0.95;
+  will-change: transform;
+  transform-style: preserve-3d;
+  transform: perspective(800px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1);
+  transition: transform 0.55s cubic-bezier(0.23, 1, 0.32, 1), filter 0.35s ease;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.35));
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.hero-visual:hover .hero-logo {
+  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 28px rgba(212, 255, 97, 0.09));
+}
+
+.portfolio-hero .section-note {
+  margin: 16px 0 0;
+  max-width: 420px;
+  border-left: 2px solid var(--border-strong);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
 }
 
 .hero-label {
@@ -287,18 +330,18 @@ a { text-decoration: none; color: inherit; }
 
 .hero-value-wrap {
   display: inline-flex;
-  align-items: flex-start;
-  gap: 3px;
+  align-items: baseline;
+  gap: 4px;
   line-height: 1;
   margin-bottom: 18px;
 }
 
 .hero-currency {
-  font-size: 28px;
-  font-weight: 400;
+  font-size: 62px;
+  font-weight: 500;
   font-family: var(--font-mono);
   color: var(--text-tertiary);
-  padding-top: 10px;
+  line-height: 1;
 }
 
 .hero-value {
@@ -314,7 +357,7 @@ a { text-decoration: none; color: inherit; }
 .hero-change {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 10px;
 }
 
@@ -383,6 +426,18 @@ a { text-decoration: none; color: inherit; }
   margin-top: 3px;
 }
 
+.section-note {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  border-left: 2px solid var(--border-strong);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  max-width: 500px;
+  line-height: 1.4;
+}
+
 /* ── 13. Reveal scroll animations ────────────────────────────── */
 .reveal {
   opacity: 0;
@@ -447,7 +502,8 @@ a { text-decoration: none; color: inherit; }
 
   .portfolio-hero { padding: 28px 0 20px; }
   .hero-value { font-size: 48px; }
-  .hero-currency { font-size: 22px; padding-top: 6px; }
+  .hero-currency { font-size: 42px; padding-top: 0; }
+  .hero-logo { width: 160px; max-height: 160px; }
 
   .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
   .charts-row { grid-template-columns: 1fr; }
