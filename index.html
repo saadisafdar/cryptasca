@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO -->
+  <title>Cryptasca — Crypto Portfolio Tracker</title>
+  <meta name="description" content="Track your crypto portfolio with real-time prices from CoinGecko. Monitor holdings, allocation, performance, and build a watchlist — all in one clean dashboard." />
+  <meta name="theme-color" content="#0B1210" />
+
+  <!-- Fonts — DM Sans (UI) + DM Mono (numbers) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js v4 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+
+  <!-- Fixed: Noise texture overlay -->
+  <div class="noise-overlay" aria-hidden="true"></div>
+
+  <!-- Fixed: Ambient acid-green glow at top -->
+  <div class="ambient-glow" aria-hidden="true"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       NAVIGATION
+       ══════════════════════════════════════════════════════════ -->
+  <nav class="nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+
+      <!-- Brand -->
+      <div class="nav-brand" role="banner">
+        <svg class="nav-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M16 2L28 8.5V23.5L16 30L4 23.5V8.5L16 2Z"
+                fill="rgba(212,255,97,0.12)" stroke="#D4FF61" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M16 8.5L22 12V19L16 22.5L10 19V12L16 8.5Z" fill="#D4FF61"/>
+        </svg>
+        <span class="nav-wordmark">Cryptasca</span>
+      </div>
+
+      <!-- Tab nav -->
+      <div class="nav-tabs" role="tablist">
+        <button class="nav-tab active"
+                id="tab-overview"
+                role="tab"
+                aria-selected="true"
+                aria-controls="section-overview"
+                data-tab="overview">Overview</button>
+
+        <button class="nav-tab"
+                id="tab-holdings"
+                role="tab"
+                aria-selected="false"
+                aria-controls="section-holdings"
+                data-tab="holdings">Holdings</button>
+
+        <button class="nav-tab"
+                id="tab-watchlist"
+                role="tab"
+                aria-selected="false"
+                aria-controls="section-watchlist"
+                data-tab="watchlist">Watchlist</button>
+      </div>
+
+      <!-- Meta: refresh + demo controls -->
+      <div class="nav-meta">
+        <span class="refresh-badge" id="refresh-badge" title="Last data refresh">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          <span id="refresh-time">Live</span>
+        </span>
+
+        <div class="demo-controls" id="demo-controls" style="display:none;">
+          <span class="demo-badge">Demo</span>
+          <button class="btn btn-ghost btn-xs" id="btn-clear-demo">Clear demo data</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Error Banner -->
+  <div class="error-banner" id="error-banner" role="alert" aria-live="polite" style="display:none;">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <circle cx="12" cy="16" r="0.5" fill="currentColor"/>
+    </svg>
+    <span id="error-message">Unable to fetch prices. Showing cached data.</span>
+    <button class="error-close" id="error-close" aria-label="Dismiss error">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MAIN CONTENT
+       ══════════════════════════════════════════════════════════ -->
+  <main class="main" id="main" role="main">
+
+    <!-- ─────────────────────────────────────────────────────────
+         OVERVIEW TAB
+         ─────────────────────────────────────────────────────── -->
+    <section class="tab-section active"
+             id="section-overview"
+             role="tabpanel"
+             aria-labelledby="tab-overview">
+
+      <div class="overview-layout">
+
+        <!-- Portfolio hero value -->
+        <header class="portfolio-hero reveal">
+          <p class="hero-label">Total Portfolio Value</p>
+          <div class="hero-value-wrap" aria-live="polite" aria-atomic="true">
+            <span class="hero-currency" aria-hidden="true">$</span>
+            <span class="hero-value" id="portfolio-total">0.00</span>
+          </div>
+          <div class="hero-change">
+            <span class="change-badge positive" id="change-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                <polyline points="18 15 12 9 6 15"/>
+              </svg>
+              <span id="change-value">+0.00%</span>
+            </span>
+            <span class="change-label">24h change</span>
+          </div>
+        </header>
+
+        <!-- Stat cards row -->
+        <div class="stats-row" role="list">
+          <div class="stat-card reveal" role="listitem">
+            <div class="stat-shell">
+              <div class="stat-core">
+                <div class="stat-label">Holdings</div>
+                <div class="stat-value mono" id="stat-holdings-count">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-card reveal" role="listitem">
+            <div class="stat-shell">
+              <div class="stat-core">
+                <div class="stat-label">Cost Basis</div>
+                <div class="stat-value mono" id="stat-cost-basis">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-card reveal" role="listitem">
+            <div class="stat-shell">
+              <div class="stat-core">
+                <div class="stat-label">Total P&amp;L</div>
+                <div class="stat-value mono" id="stat-total-pnl">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-card reveal" role="listitem">
+            <div class="stat-shell">
+              <div class="stat-core">
+                <div class="stat-label">Best Performer</div>
+                <div class="stat-value mono" id="stat-best-performer">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts row: donut + movers -->
+        <div class="charts-row">
+
+          <!-- Allocation donut -->
+          <div class="card donut-card reveal">
+            <div class="card-shell">
+              <div class="card-core">
+                <div class="card-header">
+                  <span class="card-title">Allocation</span>
+                </div>
+                <div class="donut-wrapper" id="donut-wrapper">
+                  <canvas id="allocation-chart"
+                          width="200" height="200"
+                          aria-label="Portfolio allocation donut chart"
+                          role="img"></canvas>
+                  <div class="donut-legend" id="donut-legend" role="list" aria-label="Allocation legend"></div>
+                </div>
+                <div class="donut-empty-state" id="donut-empty" style="display:none;" aria-hidden="true">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+                       stroke="var(--text-tertiary)" stroke-width="1.5" stroke-linecap="round">
+                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+                    <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+                  </svg>
+                  <span>Add holdings to see allocation</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top movers -->
+          <div class="card movers-card reveal">
+            <div class="card-shell">
+              <div class="card-core">
+                <div class="card-header">
+                  <span class="card-title">Top Movers</span>
+                  <span class="card-subtitle">From your holdings · 24h</span>
+                </div>
+                <div class="movers-list" id="movers-list" role="list">
+                  <div class="movers-empty" id="movers-empty" role="listitem">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+                         stroke="var(--text-tertiary)" stroke-width="1.5" stroke-linecap="round">
+                      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+                      <polyline points="16 7 22 7 22 13"/>
+                    </svg>
+                    <span>No holdings to show movers</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────────
+         HOLDINGS TAB
+         ─────────────────────────────────────────────────────── -->
+    <section class="tab-section"
+             id="section-holdings"
+             role="tabpanel"
+             aria-labelledby="tab-holdings">
+
+      <!-- Section header -->
+      <div class="section-header reveal">
+        <div>
+          <h1 class="section-title">Holdings</h1>
+          <p class="section-desc">Track your positions and cost basis</p>
+        </div>
+        <button class="btn btn-accent" id="btn-add-holding" aria-label="Add new holding">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Holding
+        </button>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="holdings-empty" style="display:none;" role="status">
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+               stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <h2 class="empty-title">No holdings yet</h2>
+        <p class="empty-desc">Add your first coin to start tracking your crypto portfolio</p>
+        <button class="btn btn-accent" id="btn-add-holding-empty" aria-label="Add your first holding">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add your first holding
+        </button>
+      </div>
+
+      <!-- Desktop table -->
+      <div class="table-wrapper reveal" id="holdings-table-wrapper">
+        <table class="data-table" id="holdings-table" aria-label="Holdings table">
+          <thead>
+            <tr>
+              <th class="sortable" data-col="name" id="sort-name" aria-sort="none" scope="col">
+                Coin <span class="sort-icon" aria-hidden="true">↕</span>
+              </th>
+              <th class="sortable num-col" data-col="amount" id="sort-amount" aria-sort="none" scope="col">
+                Amount <span class="sort-icon" aria-hidden="true">↕</span>
+              </th>
+              <th class="sortable num-col" data-col="buyPrice" id="sort-buyprice" aria-sort="none" scope="col">
+                Avg Buy <span class="sort-icon" aria-hidden="true">↕</span>
+              </th>
+              <th class="sortable num-col" data-col="currentPrice" id="sort-currentprice" aria-sort="none" scope="col">
+                Current <span class="sort-icon" aria-hidden="true">↕</span>
+              </th>
+              <th class="sortable num-col" data-col="value" id="sort-value" aria-sort="descending" scope="col">
+                Value <span class="sort-icon" aria-hidden="true">↓</span>
+              </th>
+              <th class="sortable num-col" data-col="gainLoss" id="sort-gainloss" aria-sort="none" scope="col">
+                Gain / Loss <span class="sort-icon" aria-hidden="true">↕</span>
+              </th>
+              <th class="actions-col" scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="holdings-tbody">
+            <!-- Rows injected by main.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile card list (shown below 768px) -->
+      <div class="mobile-holdings" id="mobile-holdings" aria-label="Holdings list" role="list">
+        <!-- Cards injected by main.js -->
+      </div>
+
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────────
+         WATCHLIST TAB
+         ─────────────────────────────────────────────────────── -->
+    <section class="tab-section"
+             id="section-watchlist"
+             role="tabpanel"
+             aria-labelledby="tab-watchlist">
+
+      <div class="section-header reveal">
+        <div>
+          <h1 class="section-title">Watchlist</h1>
+          <p class="section-desc">Monitor coins you're interested in</p>
+        </div>
+      </div>
+
+      <!-- Coin search -->
+      <div class="search-wrapper reveal" id="watchlist-search-wrapper">
+        <div class="search-input-wrap">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text"
+                 class="search-input"
+                 id="watchlist-search"
+                 placeholder="Search any coin to add…"
+                 autocomplete="off"
+                 spellcheck="false"
+                 aria-label="Search coins to add to watchlist"
+                 aria-autocomplete="list"
+                 aria-controls="watchlist-dropdown" />
+          <div class="search-spinner" id="search-spinner" style="display:none;" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+              <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round">
+                <animateTransform attributeName="transform" type="rotate"
+                                  from="0 12 12" to="360 12 12" dur="0.75s" repeatCount="indefinite"/>
+              </circle>
+            </svg>
+          </div>
+        </div>
+        <div class="search-dropdown"
+             id="watchlist-dropdown"
+             style="display:none;"
+             role="listbox"
+             aria-label="Coin search results"></div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="watchlist-empty" style="display:none;" role="status">
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+               stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <h2 class="empty-title">Your watchlist is empty</h2>
+        <p class="empty-desc">Search for any coin above and add it to start monitoring</p>
+      </div>
+
+      <!-- Watchlist card grid -->
+      <div class="watchlist-grid" id="watchlist-grid" aria-label="Watchlist" role="list">
+        <!-- Cards injected by main.js -->
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       COIN DETAIL SLIDE PANEL
+       ══════════════════════════════════════════════════════════ -->
+  <div class="slide-panel-backdrop"
+       id="coin-detail-backdrop"
+       aria-hidden="true"></div>
+
+  <aside class="slide-panel"
+         id="coin-detail-panel"
+         role="dialog"
+         aria-modal="true"
+         aria-label="Coin detail"
+         style="display:none;">
+    <div class="slide-panel-inner">
+
+      <!-- Panel header: coin info + price + close -->
+      <div class="panel-header">
+        <div class="panel-coin-info" id="panel-coin-info">
+          <img class="panel-coin-icon" id="panel-coin-icon" src="" alt=""
+               width="36" height="36" onerror="this.style.display='none'" />
+          <div>
+            <div class="panel-coin-name" id="panel-coin-name">—</div>
+            <div class="panel-coin-symbol" id="panel-coin-symbol">—</div>
+          </div>
+        </div>
+        <div class="panel-price-info">
+          <div class="panel-price mono" id="panel-price">—</div>
+          <div class="panel-price-change" id="panel-price-change"></div>
+        </div>
+        <button class="panel-close" id="panel-close" aria-label="Close detail panel">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Chart range toggle -->
+      <div class="chart-range-tabs" role="tablist" aria-label="Chart time range">
+        <button class="range-tab active" data-range="1" role="tab" aria-selected="true">24h</button>
+        <button class="range-tab" data-range="7"   role="tab" aria-selected="false">7d</button>
+        <button class="range-tab" data-range="30"  role="tab" aria-selected="false">30d</button>
+        <button class="range-tab" data-range="365" role="tab" aria-selected="false">1y</button>
+      </div>
+
+      <!-- Price history chart -->
+      <div class="panel-chart-wrap" role="img" aria-label="Price history chart">
+        <canvas id="detail-chart"></canvas>
+        <div class="chart-loading" id="chart-loading" style="display:none;" aria-live="polite">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+            <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round">
+              <animateTransform attributeName="transform" type="rotate"
+                                from="0 12 12" to="360 12 12" dur="0.75s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Market stats grid -->
+      <div class="panel-stats" id="panel-stats" role="list">
+        <div class="panel-stat" role="listitem">
+          <span class="panel-stat-label">Market Cap</span>
+          <span class="panel-stat-value mono" id="stat-market-cap">—</span>
+        </div>
+        <div class="panel-stat" role="listitem">
+          <span class="panel-stat-label">24h Volume</span>
+          <span class="panel-stat-value mono" id="stat-volume">—</span>
+        </div>
+        <div class="panel-stat" role="listitem">
+          <span class="panel-stat-label">All-Time High</span>
+          <span class="panel-stat-value mono" id="stat-ath">—</span>
+        </div>
+        <div class="panel-stat" role="listitem">
+          <span class="panel-stat-label">Circulating Supply</span>
+          <span class="panel-stat-value mono" id="stat-supply">—</span>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       ADD / EDIT HOLDING MODAL
+       ══════════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop"
+       id="modal-backdrop"
+       aria-hidden="true"
+       style="display:none;"></div>
+
+  <div class="modal"
+       id="holding-modal"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="modal-title"
+       style="display:none;">
+    <div class="modal-inner">
+
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-title">Add Holding</h2>
+        <button class="modal-close" id="modal-close" aria-label="Close modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <form class="modal-form" id="holding-form" novalidate>
+
+        <!-- Hidden fields for selected coin -->
+        <input type="hidden" id="selected-coin-id" />
+        <input type="hidden" id="selected-coin-name" />
+        <input type="hidden" id="selected-coin-symbol" />
+
+        <!-- Coin search -->
+        <div class="form-group">
+          <label class="form-label" for="coin-search-input">Coin</label>
+          <div class="search-input-wrap">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text"
+                   class="search-input"
+                   id="coin-search-input"
+                   placeholder="Search Bitcoin, Ethereum…"
+                   autocomplete="off"
+                   spellcheck="false"
+                   aria-label="Search for a coin"
+                   aria-autocomplete="list"
+                   aria-controls="modal-coin-dropdown" />
+            <div class="search-spinner" id="modal-search-spinner" style="display:none;" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round">
+                  <animateTransform attributeName="transform" type="rotate"
+                                    from="0 12 12" to="360 12 12" dur="0.75s" repeatCount="indefinite"/>
+                </circle>
+              </svg>
+            </div>
+          </div>
+          <div class="search-dropdown"
+               id="modal-coin-dropdown"
+               style="display:none;"
+               role="listbox"
+               aria-label="Coin search results"></div>
+
+          <!-- Selected coin display chip -->
+          <div class="selected-coin-display" id="selected-coin-display" style="display:none;">
+            <img class="selected-coin-icon" id="selected-coin-icon" src="" alt=""
+                 width="20" height="20" onerror="this.style.display='none'" />
+            <span id="selected-coin-label">—</span>
+            <button type="button" class="clear-selection" id="clear-coin-selection"
+                    aria-label="Clear coin selection">×</button>
+          </div>
+        </div>
+
+        <!-- Amount + Buy price (side by side) -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="holding-amount">Amount</label>
+            <input type="number"
+                   class="form-input mono"
+                   id="holding-amount"
+                   placeholder="0.00"
+                   step="any"
+                   min="0.000000001"
+                   required
+                   aria-required="true" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="holding-buy-price">Buy Price (USD)</label>
+            <input type="number"
+                   class="form-input mono"
+                   id="holding-buy-price"
+                   placeholder="0.00"
+                   step="any"
+                   min="0.000001"
+                   required
+                   aria-required="true" />
+          </div>
+        </div>
+
+        <!-- Buy date -->
+        <div class="form-group">
+          <label class="form-label" for="holding-buy-date">Buy Date</label>
+          <input type="date"
+                 class="form-input"
+                 id="holding-buy-date"
+                 aria-label="Date of purchase" />
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" id="modal-cancel">Cancel</button>
+          <button type="submit" class="btn btn-accent" id="modal-submit">Add Holding</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCRIPTS — loaded in dependency order
+       ══════════════════════════════════════════════════════════ -->
+  <script src="js/api.js"></script>
+  <script src="js/portfolio.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+</html>

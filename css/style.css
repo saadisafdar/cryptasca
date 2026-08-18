@@ -1,0 +1,466 @@
+/* ============================================================
+   CRYPTASCA — Design Tokens & Base Layout
+   Aesthetic: Dark fintech / linear-tier dark. Acid-green accent
+   on deep forest-black. No gradients, no harsh shadows.
+   ============================================================ */
+
+/* ── 1. Design Tokens ──────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg-base:     #0B1210;
+  --bg-surface:  #1C2B27;
+  --bg-elevated: #233430;
+  --bg-input:    #162220;
+  --bg-hover:    #2A3D38;
+
+  /* Accent — acid chartreuse */
+  --accent:        #D4FF61;
+  --accent-dim:    rgba(212, 255, 97, 0.10);
+  --accent-border: rgba(212, 255, 97, 0.22);
+  --accent-glow:   rgba(212, 255, 97, 0.05);
+
+  /* Text — off-white green tints, no pure white */
+  --text-primary:   #E8F2E9;
+  --text-secondary: #8FA89A;
+  --text-tertiary:  #4D6560;
+
+  /* Borders — hairline only */
+  --border:        rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.11);
+
+  /* Semantic: loss only */
+  --loss:    #E05252;
+  --loss-bg: rgba(224, 82, 82, 0.09);
+  --loss-border: rgba(224, 82, 82, 0.22);
+
+  /* Typography */
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'DM Mono', 'SF Mono', 'Fira Code', monospace;
+
+  /* Radii */
+  --r-xs:  6px;
+  --r-sm:  8px;
+  --r-md:  12px;
+  --r-lg:  16px;
+  --r-xl:  20px;
+
+  /* Shadows — low-opacity dark, not harsh */
+  --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.28), 0 1px 3px rgba(0, 0, 0, 0.18);
+  --shadow-modal: 0 24px 80px rgba(0, 0, 0, 0.55), 0 4px 16px rgba(0, 0, 0, 0.3);
+
+  /* Motion — custom cubic bezier, never ease-in-out */
+  --ease:      cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-fast: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-pop:  cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── 2. Reset ───────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+html, body {
+  overflow-x: clip;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100dvh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img { max-width: 100%; display: block; }
+button { cursor: pointer; font-family: var(--font-sans); border: none; background: none; }
+input, select, textarea { font-family: var(--font-sans); outline: none; color: inherit; }
+table { border-collapse: collapse; width: 100%; }
+a { text-decoration: none; color: inherit; }
+
+/* ── 3. Noise overlay (fixed, GPU-composited, pointer-none) ── */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  will-change: auto;
+}
+
+/* ── 4. Ambient glow (fixed behind content) ─────────────────── */
+.ambient-glow {
+  position: fixed;
+  top: -240px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(212, 255, 97, 0.055) 0%, transparent 68%);
+  pointer-events: none;
+  z-index: 0;
+  will-change: auto;
+}
+
+/* ── 5. Navigation ───────────────────────────────────────────── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(11, 18, 16, 0.82);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 28px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.nav-logo {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.nav-wordmark {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+}
+
+.nav-tab {
+  padding: 6px 14px;
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text-secondary);
+  transition: color 0.2s var(--ease-fast), background 0.2s var(--ease-fast);
+  position: relative;
+  white-space: nowrap;
+}
+
+.nav-tab:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.nav-tab.active {
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.nav-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.refresh-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  letter-spacing: 0.01em;
+}
+
+.refresh-badge svg {
+  flex-shrink: 0;
+}
+
+/* ── 6. Error Banner ─────────────────────────────────────────── */
+.error-banner {
+  background: rgba(224, 82, 82, 0.09);
+  border-bottom: 1px solid var(--loss-border);
+  padding: 10px 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--loss);
+  font-size: 13px;
+  position: relative;
+  z-index: 49;
+  animation: fadeDown 0.25s var(--ease-fast);
+}
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.error-close {
+  margin-left: auto;
+  color: var(--loss);
+  opacity: 0.65;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s;
+}
+.error-close:hover { opacity: 1; }
+
+/* ── 7. Main content area ────────────────────────────────────── */
+.main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 28px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── 8. Tab sections ─────────────────────────────────────────── */
+.tab-section {
+  display: none;
+}
+
+.tab-section.active {
+  display: block;
+  animation: tabFadeUp 0.38s var(--ease-fast) both;
+}
+
+@keyframes tabFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── 9. Overview layout ──────────────────────────────────────── */
+.overview-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Portfolio hero */
+.portfolio-hero {
+  text-align: center;
+  padding: 40px 0 28px;
+}
+
+.hero-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 14px;
+}
+
+.hero-value-wrap {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 3px;
+  line-height: 1;
+  margin-bottom: 18px;
+}
+
+.hero-currency {
+  font-size: 28px;
+  font-weight: 400;
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+  padding-top: 10px;
+}
+
+.hero-value {
+  font-size: 72px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum";
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.hero-change {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.change-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  letter-spacing: -0.01em;
+}
+
+.change-badge.positive {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.change-badge.negative {
+  background: var(--loss-bg);
+  color: var(--loss);
+}
+
+.change-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+/* ── 10. Stats row ───────────────────────────────────────────── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+/* ── 11. Charts row ──────────────────────────────────────────── */
+.charts-row {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+/* ── 12. Section header ──────────────────────────────────────── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.section-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 3px;
+}
+
+/* ── 13. Reveal scroll animations ────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.55s var(--ease-fast),
+              transform 0.55s var(--ease-fast);
+}
+
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger via CSS custom property */
+.reveal:nth-child(1) { transition-delay: 0ms; }
+.reveal:nth-child(2) { transition-delay: 60ms; }
+.reveal:nth-child(3) { transition-delay: 120ms; }
+.reveal:nth-child(4) { transition-delay: 180ms; }
+.reveal:nth-child(5) { transition-delay: 240ms; }
+
+/* ── 14. Utility classes ─────────────────────────────────────── */
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum";
+}
+
+.positive { color: var(--accent); }
+.negative { color: var(--loss); }
+.muted    { color: var(--text-secondary); }
+.dim      { color: var(--text-tertiary); }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── 15. Responsive ──────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .charts-row {
+    grid-template-columns: 280px 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-inner {
+    padding: 0 16px;
+    height: 54px;
+    gap: 12px;
+  }
+  .nav-wordmark { font-size: 15px; }
+  .nav-tab { padding: 6px 10px; font-size: 13px; }
+  .nav-meta { display: none; }
+
+  .main { padding: 20px 16px 60px; }
+
+  .portfolio-hero { padding: 28px 0 20px; }
+  .hero-value { font-size: 48px; }
+  .hero-currency { font-size: 22px; padding-top: 6px; }
+
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .charts-row { grid-template-columns: 1fr; }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .error-banner { padding: 10px 16px; font-size: 12px; }
+}
+
+@media (max-width: 480px) {
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .nav-tab { padding: 5px 8px; font-size: 12px; }
+}
