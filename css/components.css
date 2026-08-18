@@ -624,16 +624,25 @@
 
 /* ── 9. Search Input + Dropdown ──────────────────────────────── */
 
+/* Bug fix: overflow:visible ensures the absolute dropdown isn't clipped.
+   The reveal class adds transform which would trap position:fixed but not
+   position:absolute — the real anchor is .search-input-wrap below. */
 .search-wrapper {
-  position: relative;
+  /* No position:relative here — we don't want this to be the offset parent.
+     The reveal transform would confine absolutely-positioned children if
+     this element is the containing block. Let .search-input-wrap anchor it. */
   margin-bottom: 24px;
   max-width: 480px;
+  overflow: visible;
 }
 
+/* The dropdown is positioned relative to this element, not .search-wrapper.
+   This avoids the reveal/transform stacking context issue. */
 .search-input-wrap {
   position: relative;
   display: flex;
   align-items: center;
+  overflow: visible; /* allow dropdown to extend below without clipping */
 }
 
 .search-icon {
@@ -664,8 +673,12 @@
 .search-spinner {
   position: absolute;
   right: 14px;
+  display: flex;
+  align-items: center;
 }
 
+/* Dropdown floats as an overlay anchored to .search-input-wrap.
+   z-index: 300 clears cards (which have transforms creating stacking contexts). */
 .search-dropdown {
   position: absolute;
   top: calc(100% + 6px);
@@ -674,13 +687,14 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border-strong);
   border-radius: var(--r-md);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-  z-index: 100;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 300;
   max-height: 280px;
   overflow-y: auto;
-  animation: dropdownFade 0.18s var(--ease-fast);
+  overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;
+  /* No animation — avoids re-triggering stacking context on each render */
 }
 
 @keyframes dropdownFade {
@@ -848,9 +862,24 @@
 .wc-change.positive { background: var(--accent-dim); color: var(--accent); }
 .wc-change.negative { background: var(--loss-bg); color: var(--loss); }
 
-.wc-sparkline {
-  height: 48px;
+/* Sparkline fix: constrain Chart.js responsive sizing with an explicit wrapper.
+   The canvas fills 100%x100% of this container; Chart.js uses
+   responsive:true + maintainAspectRatio:false to fit exactly. */
+.wc-sparkline-wrap {
+  position: relative;
   width: 100%;
+  height: 64px;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.wc-sparkline {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 
 /* ── 11. Coin Detail Slide Panel ─────────────────────────────── */

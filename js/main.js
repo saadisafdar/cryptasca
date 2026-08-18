@@ -444,7 +444,9 @@ function renderWatchlist(watchlist, initial) {
         </svg>
         ${chg24 != null ? formatPct(chg24) : '—'}
       </div>
-      <canvas class="wc-sparkline" id="${sparklineId}" height="48"></canvas>
+      <div class="wc-sparkline-wrap">
+        <canvas class="wc-sparkline" id="${sparklineId}"></canvas>
+      </div>
     `;
 
     // Remove button
